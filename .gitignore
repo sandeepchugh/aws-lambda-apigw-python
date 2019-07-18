@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# IDE
+.idea/
+
+# Terraform
+.terraform/
+
 # C extensions
 *.so
 

@@ -1,0 +1,5 @@
+log_level = "INFO"
+env_suffix = ""
+env_name = "PROD"
+dynamodb_read_capacity = "3"
+dynamodb_write_capacity = "3"

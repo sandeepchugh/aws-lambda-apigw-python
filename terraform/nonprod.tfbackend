@@ -1,0 +1,5 @@
+bucket = "shop-tf-state-np"
+dynamodb_table = "shop-tf-state-table-np"
+key = "shop-catalog-api-np"
+region = "us-east-2"
+encrypt = "true"

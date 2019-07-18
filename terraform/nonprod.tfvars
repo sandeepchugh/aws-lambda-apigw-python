@@ -1,0 +1,5 @@
+log_level = "INFO"
+env_suffix = "-np"
+env_name = "DEV"
+dynamodb_read_capacity = "1"
+dynamodb_write_capacity = "1"
