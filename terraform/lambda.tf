@@ -12,6 +12,7 @@ resource "aws_lambda_function" "products_lambda" {
     variables = {
       LogLevel = "${var.log_level}"
       Region   = "${data.aws_region.current.name}"
+      TableName= "${aws_dynamodb_table.products_table.name}"
     }
   }
 
