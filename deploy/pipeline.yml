@@ -1,0 +1,26 @@
+---
+resources:
+  - name: shop-catalog-api
+    type: git
+    webhook_token: ((repo_webhook))
+    source:
+      uri: git@github.com:sandeepchugh/shop-catalog-api.git
+      private_key: |
+              ((git-sshkey))
+      branch: master
+      check_every: 1h
+
+jobs:
+- name: deploy_nonprod
+  plan:
+  - get: shop-catalog-api
+    trigger: true
+  - task: plan
+    file: shop-catalog-api/deploy/tasks/terraform_plan.yml
+  - task: plan
+    file: shop-catalog-api/deploy/tasks/terraform_apply.yml
+
+
+groups:
+  - name: deploy_nonprod
+    jobs: deploy_nonprod
