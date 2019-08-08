@@ -8,19 +8,101 @@ resources:
       private_key: |
               ((git-sshkey))
       branch: master
-      check_every: 1h
+      check_every: 72h
+
+  - name: version
+    type: semver
+    source:
+      driver: s3
+      initial_version: 0.0.1
+      access_key_id: ((nonprod_aws_access_key))
+      secret_access_key: ((nonprod_aws_secret_key))
+      bucket: shop-ci-bucket
+      region_name: us-east-2
+      key: shop-catalog-api/version
+
+  - name: gh-release
+    type: github-release
+    source:
+      owner: org-name
+      repository: shop-catalog-api
+      github_api_url: https://github.com/api/v3/
+      github_uploads_url: https://github.com/api/uploads/
+      access_token: ((gh-access-token))
+
+  - name: s3-artifacts
+    type: s3
+    source:
+      access_key_id: ((nonprod_aws_access_key))
+      secret_access_key: ((nonprod_aws_secret_key))
+      bucket: shop-ci-bucket
+      region_name: us-east-2
+      regexp: artifacts/shop-catalog-api-(.*).zip
 
 jobs:
-- name: deploy_nonprod
-  plan:
-  - get: shop-catalog-api
-    trigger: true
-  - task: plan
-    file: shop-catalog-api/deploy/tasks/terraform_plan.yml
-  - task: plan
-    file: shop-catalog-api/deploy/tasks/terraform_apply.yml
+  - name: test
+    public: true
+    plan:
+      - get: shop-catalog-api
+        trigger: true
+      - task: test
+        file: shop-catalog-api/ci/tasks/tests.yml
 
+  - name: build_package
+    plan:
+    - get: shop-catalog-api
+      trigger: true
+      passed: [test]
+    - get: version
+      params: {bump: patch}
+    - put: version
+      params: {bump: patch, file: version/number}
+    - task: build
+      file: shop-catalog-api/deploy/tasks/build.yml
+    - task: package
+      file: shop-catalog-api/deploy/tasks/package.yml
+    - put: s3-artifacts
+      params: {file: artifacts/*.zip}
+
+  - name: deploy_nonprod
+    plan:
+    - get: shop-catalog-api
+      trigger: true
+      passed: [build_package]
+    - get: version
+      passed: [build_package]
+    - get: s3-artifacts
+      passed: [build_package]
+    - task: unpackage
+      file: shop-catalog-api/deploy/tasks/unpackage.yml
+    - task: plan
+      file: shop-catalog-api/deploy/tasks/terraform_plan.yml
+    - task: apply
+      file: shop-catalog-api/deploy/tasks/terraform_apply.yml
+
+  - name: github_release
+    public: false
+    plan:
+    - get: shop-catalog-api
+      trigger: true
+      passed: [deploy_nonprod]
+    - get: version
+      passed: [deploy_nonprod]
+    - put: version
+      params: {file: version/number}
+    - get: s3-artifacts
+      passed: [deploy_nonprod]
+    - put: gh-release
+      params:
+        tag: version/number
+        name: version/number
+        globs:
+          - s3-artfacts/shop-catalog-api-*.zip
 
 groups:
   - name: deploy_nonprod
-    jobs: deploy_nonprod
+    jobs:
+      - test
+      - build_package
+      - deploy_nonprod
+      - github_release
