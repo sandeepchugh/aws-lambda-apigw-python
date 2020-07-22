@@ -1,21 +1,51 @@
-# Shop Product Catalog Api
+# Api using AWS Lambda, Api Gateway and Python
 
-Api to retrieve product list by category and product details by sku
+### What is this?
+This is a demo project of a user profile api using the following AWS services:
+- Api Gateway 
+- AWS Lambda 
+- Dynamodb
 
-### Get Products By Category
+The Api is used to retrieve product list by category and product details by sku
+
+### How does this work?
+#### Get Products By Category
 
 GET /products/{category_name}
 
-### Get Product Details By Sku 
+
+#### Get Product Details By Sku 
 
 GET /products/{sku_id}/details
 
 
-## Terraform
+### How is this deployed?
+The project uses terraform to deploy the resources and depencencies in AWS.
+
+Install terraform in your local machine or build server using terraform cli
+https://www.terraform.io/downloads.html
+
+Terraform uses the aws provider to interact with aws services. More details on 
+the aws provider are available at 
+https://www.terraform.io/docs/providers/aws/index.html
+
+Note: Add ZoneId in git 
+
+#### IAC (Terraform)
+
+DEVELOPMENT
+```shell script
+terraform init -backend-config dev.tfbackend
+terraform plan -var-file dev.tfvars
+terraform apply -var-file dev.tfvars
 
 ```
-terraform -reconfigure -backend-config nonprod.tfbackend
-terraform plan -var-file nonprod.tfvars
+
+PRODUCTION
+```shell script
+terraform init -backend-config prod.tfbackend
+terraform plan -var-file prod.tfvars
+terraform apply -var-file prod.tfvars
 ```
 
 ## Continuous Integrstion Pipeline Setup
